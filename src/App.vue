@@ -1,28 +1,57 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
+  <v-app>
+    <v-app-bar
+      app
+      color="primary"
+      dark
+      flat
+    >
+    <v-spacer />
+      <div class="d-flex align-center">
+        <h2
+        class="font-weight-regular"
+        transition="scale-transition"
+        >
+        VaxiFinder
+        </h2>
+      </div>
+      <v-spacer />
+    </v-app-bar>
+    <v-main>
+      <Home/>
+    </v-main>
+    <v-footer>
+      <span class="caption grey--text text--darken-1" style="margin-left:auto;margin-right:auto">
+          Made with ❤️ in Appocs Solutions</span>
+    </v-footer>
+  </v-app>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import Home from './components/Home';
 
 export default {
   name: 'App',
+
   components: {
-    HelloWorld
-  }
-}
+    Home,
+  },
+
+  data: () => ({
+    //
+  }),
+};
 </script>
 
-<style>
+<style lang="scss">
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+  background: #F9F9F9;
+}
+.v-footer{
+
+  background: #F1F1F1 !important;
 }
 </style>
