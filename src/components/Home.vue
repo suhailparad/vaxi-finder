@@ -67,11 +67,12 @@
           </v-col>
           <v-col cols="8" class="mt-1 pt-1">
             <h5 class="caption grey--text text--darken-2">{{center.address}}</h5>
+            <h5 class="caption grey--text text--darken-2">{{center.district_name}}, {{center.state_name}}</h5>     
             <h5 class="caption primary--text text--darken-3 mb-2 mt-2">
               <v-icon class="primary--text text-darken-4" style="top:-2px !important" small>mdi-calendar-range</v-icon>
               {{center.date}}
             </h5>
-            <h5 class="caption primary--text text--darken-3 mb-2 mt-2">
+            <h5 class="caption primary--text text--darken-3">
                <v-icon class="primary--text text-darken-4" style="top:-2px !important" small>mdi-clock-outline</v-icon>
               {{moment(center.from,"HH:mm:ss").format("hh:mm A")}} - 
               {{moment(center.to,"HH:mm:ss").format("hh:mm A")}}  
@@ -80,7 +81,7 @@
           <v-col cols="4" class="text-center" >
             <h3 class="green--text text--darken-1">{{center.available_capacity}}</h3>
             <h5 class="caption grey--text text--darken-3">Doses</h5>
-            <v-btn @click="bookNow" class="mt-2" rounded small outlined color="primary">BOOK</v-btn>
+            <v-btn @click="openDetails(center)" class="mt-2" rounded small outlined color="primary">VIEW</v-btn>
           </v-col>
           <v-col cols="12" style="padding-top:0px !important">
             
@@ -104,16 +105,19 @@
           No slots available in this area right now.
         </span>
     </v-container>
-
+    <Detail :popup.sync="popup" :slots="slots" />
   </v-container>
 </template>
 
 <script>
 import moment from 'moment';
 import axios from 'axios';
-  export default {
+import Detail from './Detail';  
+export default {
     name: 'Home',
-
+    components:{
+      Detail
+    },
     data: () => ({
       zip:'',
       date:moment(),
@@ -122,9 +126,15 @@ import axios from 'axios';
       isSearching:false,
       centers:[],
       days:[],
+      popup:false,
+      slots:{},
     }),
     created(){
       this.generateSevenDays();
+      let vm=this;
+      window.addEventListener("hashchange", function(){
+        if(vm.popup && location.hash!="#slot") vm.popup=false;
+      }, false);
     },
     methods: {
       generateSevenDays(){
@@ -137,8 +147,10 @@ import axios from 'axios';
         this.date=day;
         this.findCenter();
       },
-      bookNow(){
-          window.open("https://selfregistration.cowin.gov.in", "_blank");    
+      openDetails(_slot){
+        location.hash="slot";
+        this.slots=_slot;
+        this.popup=true; 
       },
       findCenter(){
         if(this.zip==null || this.zip==""){

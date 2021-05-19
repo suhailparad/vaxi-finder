@@ -8,12 +8,12 @@
     >
     <v-spacer />
       <div class="d-flex align-center">
-        <h2
+        <h3
         class="font-weight-regular"
         transition="scale-transition"
         >
         VaxiFinder
-        </h2>
+        </h3>
       </div>
       <v-spacer />
     </v-app-bar>
