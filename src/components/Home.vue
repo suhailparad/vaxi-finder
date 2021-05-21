@@ -1,8 +1,9 @@
 <template>
   <v-container>
-    <v-text-field
+    <!-- <v-text-field
       style="height:60px"
       solo
+      readonly
       plain
       type="number"
       clearable
@@ -10,7 +11,20 @@
       prepend-inner-icon="mdi-magnify"
       v-model="zip"
       @input="findCenter"
-    ></v-text-field>
+      @click="openLocationFinder"
+    ></v-text-field> -->
+
+    <v-btn 
+      large
+      block
+      outlined
+      @click="openLocationFinder"
+      class="location-btn font-weight-regular"
+      color="secondary"
+    >
+      <v-icon>mdi-magnify</v-icon>
+      Search for Vaccination Slots
+      </v-btn>
  
     <v-container 
       class="text-center mt-12 pt-12"
@@ -104,6 +118,102 @@
           No slots available in this area right now.
         </span>
     </v-container>
+
+    <v-dialog
+        persistent
+        v-model="filterDialog"
+      >
+      <v-card>
+        <v-card-text class="pt-5">
+          <h5 class="body-2 pb-3">Search in your location</h5>
+          <v-divider class="mb-5"></v-divider>
+          
+          <v-btn 
+          class="mr-3"
+            :outlined="filterType!=0"
+            small
+            color="primary"
+            @click="changeFilterType(0)"
+          >District</v-btn>
+
+          <v-btn 
+            :outlined="filterType!=1"
+            small
+            color="primary"
+            @click="changeFilterType(1)"
+          >Pincode</v-btn>
+
+          <div v-if="filterType==0" class="pt-5 pb-3">
+            <label >State</label>
+            <v-autocomplete
+              :items="states"
+              :loading="isStateLoading"
+              v-model="filter.state_id" 
+              item-text="state_name"
+              item-value="state_id"
+              class="mt-1 mb-2" 
+              elevation="0" 
+              solo 
+               
+              clearable
+              label="search for a state..."
+              @change="fetchDistricts"
+            ></v-autocomplete>
+
+            <label >District</label>
+            <v-autocomplete
+              :items="districts"
+              item-text="district_name"
+              item-value="district_id"
+              :loading="isDistrictLoading"
+              v-model="filter.district_id" 
+              class="mt-1 mb-2" 
+              elevation="0" 
+              solo 
+               
+              clearable
+              label="search for a district..."
+            ></v-autocomplete>
+
+          </div>
+
+          <div v-if="filterType==1" class="pt-3 pb-3">
+            <label >Pincode</label>
+            <v-text-field 
+              type="number" 
+              class="mt-1 mb-2" 
+              elevation="0" 
+              solo 
+              clearable
+              label="enter your zip code"
+              v-model="filter.pincode"
+            ></v-text-field>
+          </div>
+
+          <v-divider></v-divider>
+        </v-card-text>
+        <v-card-actions>
+        <v-spacer></v-spacer>
+          <v-btn
+            color="error"
+            text
+            small
+            @click="filterDialog = false"
+          >
+            Close
+          </v-btn>
+          <v-btn
+            color="primary"
+            text
+            small
+            @click="findCenter"
+          >
+            Search
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <Detail :popup.sync="popup" :slots="slots" />
 
     <v-snackbar
@@ -136,7 +246,6 @@ export default {
       Detail
     },
     data: () => ({
-      zip:'',
       date:moment(),
       isEmpty:false,
       isSearched:false,
@@ -146,6 +255,13 @@ export default {
       popup:false,
       slots:{},
       snackbar:false,
+      filterDialog:false,
+      states:[],
+      districts:[],
+      filterType:0,
+      filter:{},
+      isStateLoading:false,
+      isDistrictLoading:false
     }),
     created(){
       this.generateSevenDays();
@@ -170,34 +286,79 @@ export default {
         this.slots=_slot;
         this.popup=true; 
       },
-      findCenter(){
-        if(this.zip==null || this.zip==""){
-            this.isSearching=false;
-            this.isSearched=false;
-            this.centers=[];
-            this.date=moment();
+      openLocationFinder(){
+        this.filterDialog=true
+        if(this.states.length>0){
           return;
         }
-        if(this.zip.length == 6){
-          this.isSearching=true;
-          let param={
-            pincode:this.zip,
-            date:moment(this.date).format('DD-MM-YYYY'),
-          };
-          axios.post("https://vaxiend.appocs.com/api/sessions/pin",param).then((response)=>{
-            this.centers=response.data.sessions;
-            this.isEmpty=this.centers.length>0?false:true;
-            this.isSearching=false;
-            this.isSearched=true;
-          }).catch(()=>{
-            this.isEmpty=true;
-            this.isSearching=false;
-            this.isSearched=false;
-            this.snackbar=true;
+        this.fetchStates();
+        
+      },
+      changeFilterType(_type){
+        this.filterType=_type;
+      },
+      fetchStates(){
+         this.isStateLoading=true;
+          axios.post('http://localhost:8000/api/states')
+          .then((response)=>{
+            this.states=response.data.states;
+            this.isStateLoading=false;
+          }).catch((error)=>{
+            console.log(error);
+            this.isStateLoading=false;
           })
-        }else{
+      },
+      fetchDistricts(){
+        this.isDistrictLoading=true;
+        axios.post('http://localhost:8000/api/states/'+this.filter.state_id+'/districts')
+        .then((response)=>{
+          this.districts=response.data.districts;
+          this.isDistrictLoading=false;
+        }).catch((error)=>{
+          console.log(error);
+          this.isDistrictLoading=false;
+        })
+      },
+      findCenter(){
+        this.filterDialog=false;
+        this.isSearching=true;
+        if(this.filterType==1)this.filterCenterByZip();
+        else this.filterCenterByDistrict();
+      },
+      filterCenterByZip(){
+        let param={
+          pincode:this.filter.pincode,
+          date:moment(this.date).format('DD-MM-YYYY'),
+        };
+        axios.post("https://vaxiend.appocs.com/api/sessions/pin",param).then((response)=>{
+          this.centers=response.data.sessions;
+          this.isEmpty=this.centers.length>0?false:true;
           this.isSearching=false;
-        }
+          this.isSearched=true;
+        }).catch(()=>{
+          this.isEmpty=true;
+          this.isSearching=false;
+          this.isSearched=false;
+          this.snackbar=true;
+        })
+      },
+      filterCenterByDistrict(){
+        let param={
+          district_id:this.filter.district_id,
+          date:moment(this.date).format('DD-MM-YYYY'),
+        };
+        axios.post("http://localhost:8000/api/sessions/district",param)
+        .then((response)=>{
+          this.centers=response.data.sessions;
+          this.isEmpty=this.centers.length>0?false:true;
+          this.isSearching=false;
+          this.isSearched=true;
+        }).catch(()=>{
+          this.isEmpty=true;
+          this.isSearching=false;
+          this.isSearched=false;
+          this.snackbar=true;
+        })
       }
     },
   }
@@ -224,5 +385,8 @@ export default {
 .date-filter::-webkit-scrollbar {
   width: 0;
   height: 0;
+}
+.location-btn {
+    text-transform: none;
 }
 </style>
