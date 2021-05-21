@@ -3,6 +3,6 @@ module.exports = {
     'vuetify'
   ],
   devServer: {
-    proxy: 'https://cdn-api.co-vin.in',
+    proxy: 'https://vaxiend.appocs.com',
   }
 }

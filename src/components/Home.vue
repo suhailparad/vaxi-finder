@@ -84,7 +84,6 @@
             <v-btn @click="openDetails(center)" class="mt-2" rounded small outlined color="primary">VIEW</v-btn>
           </v-col>
           <v-col cols="12" style="padding-top:0px !important">
-            
             <v-chip small color="secondary" v-if="center.fee_type=='Free'" class="mr-2">Free</v-chip>
             <v-chip small color="secondary" v-if="center.fee_type!='Free'" class="mr-2">₹ {{parseFloat(center.fee).toFixed(2)}}</v-chip>
             <v-chip small color="secondary" class="mr-2">{{center.min_age_limit}}+</v-chip>
@@ -106,6 +105,24 @@
         </span>
     </v-container>
     <Detail :popup.sync="popup" :slots="slots" />
+
+    <v-snackbar
+      v-model="snackbar"
+      color="red darken-4"
+    >
+    Server error occured, Try Later !!
+      <template v-slot:action="{ attrs }">
+          <v-btn
+            color="white"
+            text
+            v-bind="attrs"
+            @click="snackbar = false"
+          >
+            Close
+          </v-btn>
+      </template>
+    </v-snackbar>
+
   </v-container>
 </template>
 
@@ -128,6 +145,7 @@ export default {
       days:[],
       popup:false,
       slots:{},
+      snackbar:false,
     }),
     created(){
       this.generateSevenDays();
@@ -162,18 +180,20 @@ export default {
         }
         if(this.zip.length == 6){
           this.isSearching=true;
-          axios.get("https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByPin",{
-            params:{
-              pincode:this.zip,
-              date:moment(this.date).format('DD-MM-YYYY'),
-            }
-          }).then((response)=>{
+          let param={
+            pincode:this.zip,
+            date:moment(this.date).format('DD-MM-YYYY'),
+          };
+          axios.post("https://vaxiend.appocs.com/api/sessions/pin",param).then((response)=>{
             this.centers=response.data.sessions;
             this.isEmpty=this.centers.length>0?false:true;
             this.isSearching=false;
             this.isSearched=true;
           }).catch(()=>{
-
+            this.isEmpty=true;
+            this.isSearching=false;
+            this.isSearched=false;
+            this.snackbar=true;
           })
         }else{
           this.isSearching=false;
