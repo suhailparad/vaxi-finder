@@ -1,19 +1,5 @@
 <template>
   <v-container>
-    <!-- <v-text-field
-      style="height:60px"
-      solo
-      readonly
-      plain
-      type="number"
-      clearable
-      label="enter your zip code"
-      prepend-inner-icon="mdi-magnify"
-      v-model="zip"
-      @input="findCenter"
-      @click="openLocationFinder"
-    ></v-text-field> -->
-
     <v-btn 
       large
       block
@@ -268,7 +254,14 @@ export default {
       let vm=this;
       window.addEventListener("hashchange", function(){
         if(vm.popup && location.hash!="#slot") vm.popup=false;
+        if(vm.filterDialog && location.hash!="#filter") vm.filterDialog=false;
       }, false);
+    },
+    watch:{
+      filterDialog(_value){
+        if(!_value)
+          location.hash="";
+      }
     },
     methods: {
       generateSevenDays(){
@@ -287,6 +280,7 @@ export default {
         this.popup=true; 
       },
       openLocationFinder(){
+        location.hash="filter";
         this.filterDialog=true
         if(this.states.length>0){
           return;
@@ -299,7 +293,7 @@ export default {
       },
       fetchStates(){
          this.isStateLoading=true;
-          axios.post('http://localhost:8000/api/states')
+          axios.post('https://vaxiend.appocs.com/api/states')
           .then((response)=>{
             this.states=response.data.states;
             this.isStateLoading=false;
@@ -310,7 +304,7 @@ export default {
       },
       fetchDistricts(){
         this.isDistrictLoading=true;
-        axios.post('http://localhost:8000/api/states/'+this.filter.state_id+'/districts')
+        axios.post('https://vaxiend.appocs.com/api/states/'+this.filter.state_id+'/districts')
         .then((response)=>{
           this.districts=response.data.districts;
           this.isDistrictLoading=false;
@@ -347,7 +341,7 @@ export default {
           district_id:this.filter.district_id,
           date:moment(this.date).format('DD-MM-YYYY'),
         };
-        axios.post("http://localhost:8000/api/sessions/district",param)
+        axios.post("https://vaxiend.appocs.com/api/sessions/district",param)
         .then((response)=>{
           this.centers=response.data.sessions;
           this.isEmpty=this.centers.length>0?false:true;
