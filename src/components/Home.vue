@@ -15,7 +15,7 @@
     <v-container 
       class="text-center mt-12 pt-12"
       v-if="!isSearched && !isSearching">
-      <img width="100px" 
+      <v-img class="mx-auto" width="100px" 
       src="../assets/icons/vaccine.png" />
       <h5 class="pt-2 pb-2 text--lighten-2">VACCINE FOR COVID FREE WORLD</h5>
         <span class="caption grey--text text--darken-1">
@@ -97,7 +97,7 @@
     <v-container 
       class="text-center mt-12 pt-12"
       v-if="isSearched && !isSearching && isEmpty">
-      <img width="100px" 
+      <v-img class="mx-auto" width="100px" 
       src="../assets/icons/injection.png" />
       <h5 class="pt-2 pb-2 text--lighten-2">Sorry, No slots available</h5>
         <span class="caption grey--text text--darken-1">

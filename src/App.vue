@@ -8,7 +8,7 @@
     >
     <v-spacer />
       <div class="d-flex align-center">
-        <img width="150px" src="./assets/logo.png" />
+       <v-img class="mx-auto" width="150px" src="./assets/logo.png" />
       </div>
       <v-spacer />
     </v-app-bar>
